@@ -1,0 +1,28 @@
+# Paaniyo Robots.txt
+# https://www.paaniyo.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin and vendor dashboards
+Disallow: /admin/
+Disallow: /vendor/
+Disallow: /dashboard/
+Disallow: /api/
+
+# Disallow auth pages
+Disallow: /auth/
+
+# Disallow checkout and cart
+Disallow: /checkout/
+Disallow: /cart/
+
+# Allow search engines to index
+Allow: /
+Allow: /products/
+Allow: /product/
+Allow: /brands/
+Allow: /search/
+
+# Sitemap location
+Sitemap: https://www.paaniyo.com/sitemap.xml

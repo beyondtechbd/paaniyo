@@ -1,0 +1,547 @@
+/* app/globals.css */
+/* Paaniyo.com - Premium Hydration Marketplace */
+/* Tailwind CSS v3 */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CUSTOM FONTS
+   Using distinctive fonts per frontend-design skill
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap');
+
+/* ============================================
+   CSS CUSTOM PROPERTIES
+   ============================================ */
+:root {
+  /* Primary - Deep Ocean Blue */
+  --color-primary-50: #e6f4fa;
+  --color-primary-100: #cce9f5;
+  --color-primary-200: #99d3eb;
+  --color-primary-300: #66bde1;
+  --color-primary-400: #33a7d7;
+  --color-primary-500: #0091cd;
+  --color-primary-600: #0074a4;
+  --color-primary-700: #00577b;
+  --color-primary-800: #003a52;
+  --color-primary-900: #001d29;
+  
+  /* Secondary - Aquamarine Glow */
+  --color-secondary-50: #e6faf8;
+  --color-secondary-100: #b3f0e9;
+  --color-secondary-200: #80e6da;
+  --color-secondary-300: #4ddccb;
+  --color-secondary-400: #26d4bf;
+  --color-secondary-500: #00c9b0;
+  --color-secondary-600: #00a18d;
+  --color-secondary-700: #00796a;
+  --color-secondary-800: #005147;
+  --color-secondary-900: #002923;
+  
+  /* Accent - Coral */
+  --color-accent-500: #ff6b5a;
+  --color-accent-600: #e55545;
+  
+  /* Neutral */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+  
+  /* Semantic */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-mono: 'Space Mono', monospace;
+  
+  /* Spacing */
+  --container-padding: 1rem;
+  
+  /* Shadows */
+  --shadow-glass: 0 8px 32px rgba(0, 145, 205, 0.1);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.12);
+  
+  /* Borders */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  
+  /* Glass effect */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-blur: 12px;
+}
+
+/* Dark mode */
+.dark {
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-display);
+  background: linear-gradient(180deg, var(--color-slate-50) 0%, white 50%, rgba(0, 201, 176, 0.05) 100%);
+  color: var(--color-slate-800);
+  line-height: 1.6;
+}
+
+.dark body {
+  background: linear-gradient(180deg, var(--color-slate-950) 0%, var(--color-slate-900) 50%, rgba(0, 145, 205, 0.08) 100%);
+  color: var(--color-slate-100);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   GLASSMORPHISM UTILITIES
+   ============================================ */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .glass-strong {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   GRADIENT UTILITIES
+   ============================================ */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-secondary-500) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-secondary-500) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-hero {
+  background: linear-gradient(180deg, 
+    rgba(0, 145, 205, 0.03) 0%,
+    rgba(0, 201, 176, 0.06) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.dark .gradient-hero {
+  background: linear-gradient(180deg, 
+    rgba(0, 145, 205, 0.08) 0%,
+    rgba(0, 201, 176, 0.05) 50%,
+    rgba(15, 23, 42, 0) 100%
+  );
+}
+
+/* ============================================
+   BUBBLE ANIMATION
+   ============================================ */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(100vh) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-10vh) scale(1);
+    opacity: 0;
+  }
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, 
+    rgba(0, 201, 176, 0.4) 0%,
+    rgba(0, 145, 205, 0.2) 50%,
+    transparent 70%
+  );
+  animation: float 6s ease-in-out infinite;
+}
+
+.bubble-rising {
+  animation: bubble-rise 8s ease-out infinite;
+}
+
+/* ============================================
+   WATER RIPPLE EFFECT
+   ============================================ */
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-400);
+  animation: ripple 2s ease-out infinite;
+}
+
+/* ============================================
+   SHIMMER LOADING EFFECT
+   ============================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-slate-200) 25%,
+    var(--color-slate-100) 50%,
+    var(--color-slate-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-slate-800) 25%,
+    var(--color-slate-700) 50%,
+    var(--color-slate-800) 75%
+  );
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-slate-100);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-400);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--color-slate-800);
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(0, 145, 205, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 145, 205, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-primary-200);
+  color: var(--color-primary-600);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary-400);
+  background: rgba(0, 145, 205, 0.1);
+}
+
+/* ============================================
+   CARD STYLES
+   ============================================ */
+.card {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.dark .card {
+  background: var(--color-slate-800);
+}
+
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+}
+
+/* ============================================
+   INPUT STYLES
+   ============================================ */
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 2px solid var(--color-slate-200);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 4px rgba(0, 145, 205, 0.1);
+}
+
+.dark .input {
+  background: var(--color-slate-800);
+  border-color: var(--color-slate-700);
+  color: white;
+}
+
+/* ============================================
+   BADGE STYLES
+   ============================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-primary {
+  background: rgba(0, 145, 205, 0.1);
+  color: var(--color-primary-600);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+}
+
+/* ============================================
+   PRICE DISPLAY
+   ============================================ */
+.price {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.price-currency {
+  font-size: 0.75em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.price-compare {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --container-padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 2rem;
+  }
+}
+
+/* ============================================
+   FOCUS STYLES (Accessibility)
+   ============================================ */
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+/* ============================================
+   ANIMATED UNDERLINE
+   ============================================ */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary-500), var(--color-secondary-500));
+  transition: width 0.3s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  max-width: 400px;
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-slate-200) 0%,
+    var(--color-slate-100) 50%,
+    var(--color-slate-200) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--radius-md);
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-slate-700) 0%,
+    var(--color-slate-600) 50%,
+    var(--color-slate-700) 100%
+  );
+}

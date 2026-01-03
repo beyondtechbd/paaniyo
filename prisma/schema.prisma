@@ -1,0 +1,792 @@
+// Paaniyo - Bangladesh Water & Beverage Platform
+// Complete Schema for National Infrastructure
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USER & AUTH
+// ═══════════════════════════════════════════════════════════════
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  phone         String?   @unique
+  passwordHash  String?
+  name          String?
+  image         String?
+  role          UserRole  @default(CUSTOMER)
+  emailVerified DateTime?
+  
+  // Security
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  lastLoginAt    DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  addresses     Address[]
+  orders        Order[]
+  subscriptions Subscription[]
+  jarDeposits   JarDeposit[]
+  wallet        Wallet?
+  cart          Cart?
+  favorites     Favorite[]
+  reviews       Review[]
+  trackerLogs   TrackerLog[]
+  trackerSettings TrackerSettings?
+  
+  // B2B
+  organization   Organization? @relation("OrgAdmin")
+  orgMembership  Organization? @relation("OrgMembers", fields: [organizationId], references: [id])
+  organizationId String?
+  
+  // Vendor
+  vendor        Vendor?
+  brands        Brand[]
+  
+  @@index([email])
+  @@index([phone])
+}
+
+enum UserRole {
+  ADMIN
+  VENDOR
+  CUSTOMER
+  ORG_ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  id          String  @id @default(cuid())
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  label       String  // Home, Office, etc.
+  fullName    String
+  phone       String
+  address     String
+  area        String
+  district    String
+  postcode    String?
+  landmark    String?
+  isDefault   Boolean @default(false)
+  
+  // Zone linking
+  zoneId      String?
+  zone        Zone?   @relation(fields: [zoneId], references: [id])
+  
+  orders      Order[]
+  subscriptions Subscription[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ORGANIZATION (B2B)
+// ═══════════════════════════════════════════════════════════════
+
+model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  type          OrgType
+  
+  // Contact
+  email         String
+  phone         String
+  address       String
+  district      String
+  
+  // Billing
+  billingType   BillingType @default(PREPAID)
+  creditLimit   Decimal?    @db.Decimal(10, 2)
+  creditUsed    Decimal     @default(0) @db.Decimal(10, 2)
+  billingCycle  BillingCycle @default(MONTHLY)
+  
+  // Admin
+  adminId       String   @unique
+  admin         User     @relation("OrgAdmin", fields: [adminId], references: [id])
+  members       User[]   @relation("OrgMembers")
+  
+  // Orders
+  orders        Order[]
+  subscriptions Subscription[]
+  
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum OrgType {
+  OFFICE
+  SCHOOL
+  HOSPITAL
+  GYM
+  FACTORY
+  HOTEL
+  RESTAURANT
+  EVENT
+  OTHER
+}
+
+enum BillingType {
+  PREPAID
+  POSTPAID
+  CREDIT
+}
+
+enum BillingCycle {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════════════════════════════════════
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  story       String?  @db.Text // Brand origin story
+  logo        String?
+  coverImage  String?
+  country     String?
+  founded     Int?
+  
+  // Compliance
+  bstiLicense String?
+  labReports  Json?    // Array of lab report URLs
+  certifications Json? // Array of certification objects
+  
+  // Platform
+  isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  
+  // Owner
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
+  vendorId    String?
+  
+  products    Product[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([slug])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  shortDesc   String?
+  description String?  @db.Text
+  
+  // Categorization
+  type        ProductType
+  category    ProductCategory
+  waterType   WaterType?
+  
+  // Pricing
+  priceBDT    Decimal  @db.Decimal(10, 2)
+  compareBDT  Decimal? @db.Decimal(10, 2)
+  depositBDT  Decimal? @db.Decimal(10, 2) // For jars
+  
+  // Inventory
+  stock       Int      @default(0)
+  sku         String?  @unique
+  barcode     String?
+  
+  // Specifications
+  volumeMl    Int?
+  packSize    Int      @default(1) // Units per pack
+  weight      Decimal? @db.Decimal(10, 2)
+  
+  // Water specific
+  sourceType  String?  // RO, Mineral, Spring, Artesian
+  tdsLevel    Int?     // Total Dissolved Solids
+  phLevel     Decimal? @db.Decimal(3, 1)
+  minerals    Json?    // Mineral breakdown
+  
+  // Trust & Transparency
+  labTestUrl  String?
+  batchNumber String?
+  expiryDays  Int?
+  sanitizationInfo String?
+  
+  // Discovery
+  useCases    String[] // "after-workout", "kids", "office", etc.
+  tags        String[]
+  
+  // Media
+  images      String[]
+  
+  // Flags
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  isSubscribable Boolean @default(true)
+  freeDelivery Boolean @default(false)
+  
+  // Relations
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id])
+  
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  subscriptionItems SubscriptionItem[]
+  favorites   Favorite[]
+  reviews     Review[]
+  
+  // Filtration specific
+  compatibleWith String[] // Model numbers this part is compatible with
+  replacementMonths Int?  // Recommended replacement interval
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([type])
+  @@index([category])
+  @@index([brandId])
+}
+
+enum ProductType {
+  JAR           // Refillable jars (19L, 20L)
+  BOTTLE        // Single-use bottles
+  PACK          // Multi-bottle packs
+  DISPENSER     // Water dispensers
+  FILTER_SYSTEM // RO, UV, UF systems
+  SPARE_PART    // Filters, membranes, lamps
+  BEVERAGE      // Non-water drinks
+  ACCESSORY     // Cups, stands, etc.
+}
+
+enum ProductCategory {
+  // Water
+  DRINKING_WATER
+  MINERAL_WATER
+  SPARKLING_WATER
+  FLAVORED_WATER
+  PREMIUM_WATER
+  
+  // Beverages
+  SPORTS_DRINK
+  ENERGY_DRINK
+  JUICE
+  SOFT_DRINK
+  ORS
+  KIDS_DRINK
+  
+  // Equipment
+  RO_SYSTEM
+  UV_SYSTEM
+  GRAVITY_FILTER
+  DISPENSER
+  
+  // Parts
+  SEDIMENT_FILTER
+  CARBON_FILTER
+  RO_MEMBRANE
+  UV_LAMP
+  MAINTENANCE_KIT
+  
+  // Other
+  ACCESSORY
+}
+
+enum WaterType {
+  RO
+  MINERAL
+  SPRING
+  ARTESIAN
+  PURIFIED
+  ALKALINE
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JAR DEPOSIT SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+model JarDeposit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  jarType     String   // 19L, 20L, etc.
+  quantity    Int
+  depositPaid Decimal  @db.Decimal(10, 2)
+  
+  // Tracking
+  returnedQty Int      @default(0)
+  refundedAmt Decimal  @default(0) @db.Decimal(10, 2)
+  
+  status      DepositStatus @default(ACTIVE)
+  
+  orderId     String?
+  order       Order?   @relation(fields: [orderId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+enum DepositStatus {
+  ACTIVE
+  PARTIALLY_RETURNED
+  FULLY_RETURNED
+  FORFEITED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CART
+// ═══════════════════════════════════════════════════════════════
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  
+  // For jar exchange
+  exchangeJars Int   @default(0) // Empty jars to return
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([cartId, productId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ORDERS
+// ═══════════════════════════════════════════════════════════════
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique @default(cuid())
+  
+  // Customer
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  
+  // B2B
+  organizationId String?
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  
+  // Delivery
+  addressId     String
+  address       Address     @relation(fields: [addressId], references: [id])
+  
+  // Scheduling
+  deliveryDate  DateTime?
+  deliverySlot  String?     // "9am-12pm", "2pm-6pm"
+  
+  // Items
+  items         OrderItem[]
+  
+  // Pricing
+  subtotal      Decimal     @db.Decimal(10, 2)
+  deliveryFee   Decimal     @default(0) @db.Decimal(10, 2)
+  discount      Decimal     @default(0) @db.Decimal(10, 2)
+  depositTotal  Decimal     @default(0) @db.Decimal(10, 2)
+  total         Decimal     @db.Decimal(10, 2)
+  
+  // Payment
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  paidAt        DateTime?
+  transactionId String?
+  
+  // Status
+  status        OrderStatus @default(PENDING)
+  
+  // Jar deposits
+  jarDeposits   JarDeposit[]
+  
+  // Subscription link
+  subscriptionId String?
+  subscription  Subscription? @relation(fields: [subscriptionId], references: [id])
+  
+  // Notes
+  customerNote  String?
+  internalNote  String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  totalPrice  Decimal  @db.Decimal(10, 2)
+  
+  // Jar exchange
+  exchangeJars Int     @default(0)
+  
+  createdAt   DateTime @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  COD
+  BKASH
+  NAGAD
+  ROCKET
+  CARD
+  BANK
+  WALLET
+  CREDIT // For B2B
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUBSCRIPTIONS
+// ═══════════════════════════════════════════════════════════════
+
+model Subscription {
+  id            String   @id @default(cuid())
+  
+  // Owner
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  organizationId String?
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  
+  // Delivery
+  addressId     String
+  address       Address  @relation(fields: [addressId], references: [id])
+  
+  // Schedule
+  frequency     SubFrequency
+  customDays    Int[]    // For custom: [1, 4] = Mon, Thu
+  preferredSlot String?  // "9am-12pm"
+  
+  // Items
+  items         SubscriptionItem[]
+  
+  // Duration
+  startDate     DateTime
+  endDate       DateTime?
+  
+  // Status
+  status        SubStatus @default(ACTIVE)
+  pausedUntil   DateTime?
+  
+  // Payment
+  paymentMethod PaymentMethod
+  
+  // Generated orders
+  orders        Order[]
+  nextDelivery  DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model SubscriptionItem {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+  quantity       Int
+  
+  createdAt      DateTime     @default(now())
+}
+
+enum SubFrequency {
+  DAILY
+  ALTERNATE
+  TWICE_WEEKLY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum SubStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  COMPLETED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ZONES & DELIVERY
+// ═══════════════════════════════════════════════════════════════
+
+model Zone {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  
+  // Coverage
+  districts     String[]
+  areas         String[]
+  postcodes     String[]
+  
+  // Delivery
+  deliveryFee   Decimal  @db.Decimal(10, 2)
+  minOrder      Decimal  @db.Decimal(10, 2)
+  freeDeliveryMin Decimal? @db.Decimal(10, 2)
+  
+  // Slots
+  slots         DeliverySlot[]
+  
+  // Status
+  isActive      Boolean  @default(true)
+  
+  addresses     Address[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model DeliverySlot {
+  id        String   @id @default(cuid())
+  zoneId    String
+  zone      Zone     @relation(fields: [zoneId], references: [id])
+  
+  dayOfWeek Int      // 0-6, 0 = Sunday
+  startTime String   // "09:00"
+  endTime   String   // "12:00"
+  capacity  Int      @default(50)
+  bookedCount Int    @default(0)
+  
+  isActive  Boolean  @default(true)
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WALLET
+// ═══════════════════════════════════════════════════════════════
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  
+  balance   Decimal  @default(0) @db.Decimal(10, 2)
+  
+  transactions WalletTransaction[]
+  
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  
+  type        WalletTxType
+  amount      Decimal  @db.Decimal(10, 2)
+  balance     Decimal  @db.Decimal(10, 2) // Balance after tx
+  
+  description String?
+  reference   String?  // Order ID, refund ID, etc.
+  
+  createdAt   DateTime @default(now())
+}
+
+enum WalletTxType {
+  TOPUP
+  PURCHASE
+  REFUND
+  DEPOSIT_REFUND
+  CASHBACK
+  ADJUSTMENT
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VENDOR
+// ═══════════════════════════════════════════════════════════════
+
+model Vendor {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  
+  businessName  String
+  businessEmail String
+  businessPhone String
+  businessAddress String
+  
+  // Documents
+  tradeLicense  String?
+  tinNumber     String?
+  bstiLicense   String?
+  
+  // Platform
+  status        VendorStatus @default(PENDING)
+  commissionRate Decimal     @default(10) @db.Decimal(5, 2)
+  
+  // Earnings
+  totalEarnings Decimal     @default(0) @db.Decimal(12, 2)
+  pendingPayout Decimal     @default(0) @db.Decimal(12, 2)
+  
+  brands        Brand[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REVIEWS & FAVORITES
+// ═══════════════════════════════════════════════════════════════
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  
+  rating    Int      // 1-5
+  title     String?
+  comment   String?  @db.Text
+  
+  isVerified Boolean @default(false) // Verified purchase
+  isApproved Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WATER TRACKER
+// ═══════════════════════════════════════════════════════════════
+
+model TrackerSettings {
+  id          String @id @default(cuid())
+  userId      String @unique
+  user        User   @relation(fields: [userId], references: [id])
+  
+  dailyGoalMl Int    @default(2500)
+  wakeTime    String @default("07:00")
+  sleepTime   String @default("23:00")
+  reminderInterval Int @default(60) // minutes
+  
+  updatedAt   DateTime @updatedAt
+}
+
+model TrackerLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  amountMl  Int
+  drinkType String   @default("water")
+  
+  loggedAt  DateTime @default(now())
+  
+  @@index([userId, loggedAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════
+
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  type  String @default("string")
+}
